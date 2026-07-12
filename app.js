@@ -1,4 +1,4 @@
-const WAYPOINTS = [
+var WAYPOINTS = [
   { lat: 51.2925377, lng: 19.5042431 },
   { lat: 51.1907400, lng: 19.3392900 },
   { lat: 51.1225364, lng: 19.2898146 },
@@ -6,23 +6,15 @@ const WAYPOINTS = [
   { lat: 50.9430000, lng: 19.1690000 }
 ];
 
-const DESTINATION = { lat: 50.8147, lng: 19.1368 };
+var DESTINATION = { lat: 50.8147, lng: 19.1368 };
 
-let map;
-let userMarker;
-let userCircle;
-let directionsRenderer;
-let directionsService;
+var map;
+var userMarker;
+var userCircle;
+var directionsRenderer;
 
-async function initMap() {
-  const { Map } = await google.maps.importLibrary('maps');
-  const { DirectionsRenderer, DirectionsService } = await google.maps.importLibrary('routes');
-  const { Marker } = await google.maps.importLibrary('marker');
-  const { Circle } = await google.maps.importLibrary('maps');
-
-  directionsService = new DirectionsService();
-
-  map = new Map(document.getElementById('map'), {
+window.initMap = function() {
+  map = new google.maps.Map(document.getElementById('map'), {
     zoom: 10,
     center: { lat: 51.0, lng: 19.3 },
     mapTypeControl: false,
@@ -30,8 +22,15 @@ async function initMap() {
     streetViewControl: false
   });
 
-  directionsRenderer = new DirectionsRenderer({
-    map,
+  new google.maps.Marker({
+    position: DESTINATION,
+    map: map,
+    title: 'Jasna Góra, Częstochowa',
+    label: { text: '\u{1F3C1}', fontSize: '20px' }
+  });
+
+  directionsRenderer = new google.maps.DirectionsRenderer({
+    map: map,
     suppressMarkers: true,
     polylineOptions: {
       strokeColor: '#e74c3c',
@@ -40,22 +39,17 @@ async function initMap() {
     }
   });
 
-  new Marker({
-    position: DESTINATION,
-    map,
-    title: 'Jasna Góra, Częstochowa',
-    label: { text: '🏁', fontSize: '20px' }
-  });
-
   showRoute();
-}
+};
 
 function showRoute() {
-  var waypoints = WAYPOINTS.map(function(p) {
-    return { location: p, stopover: true };
-  });
+  var service = new google.maps.DirectionsService();
+  var waypoints = [];
+  for (var i = 0; i < WAYPOINTS.length; i++) {
+    waypoints.push({ location: WAYPOINTS[i], stopover: true });
+  }
 
-  directionsService.route(
+  service.route(
     {
       origin: 'Polna 53, 97-371 Wola Krzysztoporska',
       waypoints: waypoints,
@@ -72,13 +66,16 @@ function showRoute() {
 }
 
 function locateMe() {
+  var btn = document.getElementById('locateBtn');
+  var coordsEl = document.getElementById('coords');
+
   if (!navigator.geolocation) {
-    document.getElementById('coords').textContent = 'Geolokalizacja nie jest wspierana.';
+    coordsEl.textContent = 'Geolokalizacja nie jest wspierana.';
     return;
   }
 
-  document.getElementById('locateBtn').disabled = true;
-  document.getElementById('locateBtn').textContent = 'Szukam lokalizacji...';
+  btn.disabled = true;
+  btn.textContent = 'Szukam lokalizacji...';
 
   navigator.geolocation.getCurrentPosition(
     function(pos) {
@@ -90,7 +87,7 @@ function locateMe() {
 
       userMarker = new google.maps.Marker({
         position: userPos,
-        map,
+        map: map,
         title: 'Twoja lokalizacja',
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
@@ -103,7 +100,7 @@ function locateMe() {
       });
 
       userCircle = new google.maps.Circle({
-        map,
+        map: map,
         center: userPos,
         radius: acc,
         strokeColor: '#4285F4',
@@ -118,20 +115,15 @@ function locateMe() {
       bounds.extend(DESTINATION);
       map.fitBounds(bounds, 60);
 
-      document.getElementById('coords').textContent =
-        pos.coords.latitude.toFixed(5) + ', ' + pos.coords.longitude.toFixed(5) +
-        ' (dokładność: ' + Math.round(acc) + ' m)';
-
-      document.getElementById('locateBtn').disabled = false;
-      document.getElementById('locateBtn').textContent = 'Pokaż moją lokalizację';
+      coordsEl.textContent = pos.coords.latitude.toFixed(5) + ', ' + pos.coords.longitude.toFixed(5) + ' (dok\u0142adno\u015B\u0107: ' + Math.round(acc) + ' m)';
+      btn.disabled = false;
+      btn.textContent = 'Poka\u017C moj\u0105 lokalizacj\u0119';
     },
     function(err) {
-      document.getElementById('coords').textContent = 'Błąd: ' + err.message;
-      document.getElementById('locateBtn').disabled = false;
-      document.getElementById('locateBtn').textContent = 'Pokaż moją lokalizację';
+      coordsEl.textContent = 'B\u0142\u0105d: ' + err.message;
+      btn.disabled = false;
+      btn.textContent = 'Poka\u017C moj\u0105 lokalizacj\u0119';
     },
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
   );
 }
-
-initMap();
