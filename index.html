@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rajd Rowerowy</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
+  .container { max-width: 800px; margin: 0 auto; padding: 16px; }
+  header { text-align: center; padding: 32px 16px 24px; }
+  header h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+  header p { color: #666; margin-top: 8px; font-size: 15px; }
+  #map { height: 400px; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); margin-bottom: 24px; z-index: 1; }
+  .links { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .links a { display: flex; align-items: center; gap: 12px; padding: 16px 20px; background: #fff; border-radius: 14px; text-decoration: none; color: #333; font-size: 16px; font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: box-shadow 0.2s; }
+  .links a:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+  .links .icon { font-size: 24px; flex-shrink: 0; }
+  .links .spotify { border-left: 4px solid #1DB954; }
+  .links .google-maps { border-left: 4px solid #4285F4; }
+  .links .photos { border-left: 4px solid #FFC107; }
+  .location-btn { display: block; width: 100%; padding: 14px; background: #4285F4; color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .location-btn:hover { background: #3367D6; }
+  .location-btn:disabled { background: #999; cursor: not-allowed; }
+  .coords { text-align: center; margin-top: 12px; font-size: 13px; color: #888; }
+  footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+  @media (max-width: 480px) {
+    header h1 { font-size: 24px; }
+    #map { height: 300px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Rajd Rowerowy</h1>
+    <p>Częstochowa — Jasna Góra</p>
+  </header>
+
+  <div id="map"></div>
+
+  <button class="location-btn" id="locateBtn" onclick="locateMe()">Pokaż moją lokalizację</button>
+  <p class="coords" id="coords"></p>
+
+  <div class="links">
+    <a href="https://maps.app.goo.gl/xdhuS95fciM8mtv66" target="_blank" rel="noopener" class="google-maps">
+      <span class="icon">🗺️</span> Otwórz trasę w Google Maps
+    </a>
+    <a href="https://open.spotify.com/playlist/0aw1kEuMuRSlqLUcucRNhl" target="_blank" rel="noopener" class="spotify">
+      <span class="icon">🎵</span> Playlista na Spotify
+    </a>
+    <a href="https://photos.app.goo.gl/BPEs8a2sfkRzL2bz8" target="_blank" rel="noopener" class="photos">
+      <span class="icon">📸</span> Zdjęcia — Google Photos
+    </a>
+  </div>
+
+  <footer>Rajd Rowerowy &copy; 2026</footer>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const DESTINATION = [50.8147, 19.1368]; // Jasna Góra, Częstochowa
+  const DEST_NAME = 'Jasna Góra, Częstochowa';
+
+  const map = L.map('map', { zoomControl: true }).setView(DESTINATION, 13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+  }).addTo(map);
+
+  const destMarker = L.circleMarker(DESTINATION, {
+    radius: 12, color: '#e74c3c', fillColor: '#e74c3c', fillOpacity: 0.3, weight: 3
+  }).addTo(map);
+  destMarker.bindPopup('<b>' + DEST_NAME + '</b>');
+
+  let userMarker = null;
+  let userCircle = null;
+
+  function locateMe() {
+    const btn = document.getElementById('locateBtn');
+    const coordsEl = document.getElementById('coords');
+
+    if (!navigator.geolocation) {
+      coordsEl.textContent = 'Geolokalizacja nie jest wspierana przez tę przeglądarkę.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Szukam lokalizacji...';
+
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const acc = pos.coords.accuracy;
+
+        if (userMarker) { map.removeLayer(userMarker); }
+        if (userCircle) { map.removeLayer(userCircle); }
+
+        userMarker = L.marker([lat, lng], {
+          icon: L.divIcon({
+            className: '',
+            html: '<div style="background:#4285F4;width:20px;height:20px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>',
+            iconSize: [20, 20], iconAnchor: [10, 10]
+          })
+        }).addTo(map);
+        userMarker.bindPopup('<b>Twoja lokalizacja</b>');
+
+        userCircle = L.circle([lat, lng], {
+          radius: acc, color: '#4285F4', fillColor: '#4285F4', fillOpacity: 0.1, weight: 2
+        }).addTo(map);
+
+        map.setView([lat, lng], 14);
+
+        coordsEl.textContent = 'Szerokość: ' + lat.toFixed(5) + ', Długość: ' + lng.toFixed(5) + ' (dokładność: ' + Math.round(acc) + ' m)';
+        btn.disabled = false;
+        btn.textContent = 'Pokaż moją lokalizację';
+      },
+      function(err) {
+        coordsEl.textContent = 'Nie udało się ustalić lokalizacji: ' + err.message;
+        btn.disabled = false;
+        btn.textContent = 'Pokaż moją lokalizację';
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    );
+  }
+</script>
+</body>
+</html>
