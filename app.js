@@ -1,20 +1,40 @@
-const DESTINATION = [50.8147, 19.1368];
+const DESTINATION = { lat: 50.8147, lng: 19.1368 };
 const DEST_NAME = 'Jasna Góra, Częstochowa';
 
-const map = L.map('map', { zoomControl: true }).setView(DESTINATION, 13);
+let map;
+let userMarker;
+let userCircle;
+let directionsRenderer;
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map);
+function initMap() {
+  map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 13,
+    center: DESTINATION,
+    mapId: 'rajd-rowerowy',
+    mapTypeControl: false,
+    fullscreenControl: false,
+    streetViewControl: false
+  });
 
-const destMarker = L.circleMarker(DESTINATION, {
-  radius: 12, color: '#e74c3c', fillColor: '#e74c3c', fillOpacity: 0.3, weight: 3
-}).addTo(map);
-destMarker.bindPopup('<b>' + DEST_NAME + '</b>');
+  new google.maps.Marker({
+    position: DESTINATION,
+    map,
+    title: DEST_NAME,
+    label: { text: '🏁', fontSize: '20px' }
+  });
 
-let userMarker = null;
-let userCircle = null;
+  directionsRenderer = new google.maps.DirectionsRenderer({
+    map,
+    suppressMarkers: true,
+    polylineOptions: {
+      strokeColor: '#4285F4',
+      strokeWeight: 5,
+      strokeOpacity: 0.8
+    }
+  });
+
+  locateMe();
+}
 
 function locateMe() {
   const btn = document.getElementById('locateBtn');
@@ -33,24 +53,42 @@ function locateMe() {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
       const acc = pos.coords.accuracy;
+      const userPos = { lat, lng };
 
-      if (userMarker) { map.removeLayer(userMarker); }
-      if (userCircle) { map.removeLayer(userCircle); }
+      if (userMarker) userMarker.setMap(null);
+      if (userCircle) userCircle.setMap(null);
 
-      userMarker = L.marker([lat, lng], {
-        icon: L.divIcon({
-          className: '',
-          html: '<div style="background:#4285F4;width:20px;height:20px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>',
-          iconSize: [20, 20], iconAnchor: [10, 10]
-        })
-      }).addTo(map);
-      userMarker.bindPopup('<b>Twoja lokalizacja</b>');
+      userMarker = new google.maps.Marker({
+        position: userPos,
+        map,
+        title: 'Twoja lokalizacja',
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: '#4285F4',
+          fillOpacity: 1,
+          strokeColor: '#fff',
+          strokeWeight: 3
+        }
+      });
 
-      userCircle = L.circle([lat, lng], {
-        radius: acc, color: '#4285F4', fillColor: '#4285F4', fillOpacity: 0.1, weight: 2
-      }).addTo(map);
+      userCircle = new google.maps.Circle({
+        map,
+        center: userPos,
+        radius: acc,
+        strokeColor: '#4285F4',
+        strokeOpacity: 0.3,
+        strokeWeight: 1,
+        fillColor: '#4285F4',
+        fillOpacity: 0.1
+      });
 
-      map.setView([lat, lng], 14);
+      const bounds = new google.maps.LatLngBounds();
+      bounds.extend(userPos);
+      bounds.extend(DESTINATION);
+      map.fitBounds(bounds, 80);
+
+      calcRoute(userPos);
 
       coordsEl.textContent = 'Szerokość: ' + lat.toFixed(5) + ', Długość: ' + lng.toFixed(5) + ' (dokładność: ' + Math.round(acc) + ' m)';
       btn.disabled = false;
@@ -62,5 +100,23 @@ function locateMe() {
       btn.textContent = 'Pokaż moją lokalizację';
     },
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+  );
+}
+
+function calcRoute(origin) {
+  const directionsService = new google.maps.DirectionsService();
+
+  directionsService.route(
+    {
+      origin,
+      destination: DESTINATION,
+      travelMode: google.maps.TravelMode.BICYCLING,
+      unitSystem: google.maps.UnitSystem.METRIC
+    },
+    function(result, status) {
+      if (status === 'OK') {
+        directionsRenderer.setDirections(result);
+      }
+    }
   );
 }

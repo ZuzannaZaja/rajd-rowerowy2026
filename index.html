@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rajd Rowerowy</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,11 +12,6 @@
     <h1>Rajd Rowerowy</h1>
     <p>Częstochowa — Jasna Góra</p>
   </header>
-
-  <div id="map"></div>
-
-  <button class="location-btn" id="locateBtn" onclick="locateMe()">Pokaż moją lokalizację</button>
-  <p class="coords" id="coords"></p>
 
   <div class="links">
     <a href="https://maps.app.goo.gl/xdhuS95fciM8mtv66" target="_blank" rel="noopener" class="google-maps">
@@ -31,10 +25,15 @@
     </a>
   </div>
 
+  <div id="map"></div>
+
+  <button class="location-btn" id="locateBtn" onclick="locateMe()">Pokaż moją lokalizację</button>
+  <p class="coords" id="coords"></p>
+
   <footer>Rajd Rowerowy &copy; 2026</footer>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="app.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBnJ4dfXBIsq_inGv1FYnGjkSSs-3r-30Y&callback=initMap" async defer></script>
 </body>
 </html>
