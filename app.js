@@ -12,10 +12,17 @@ let map;
 let userMarker;
 let userCircle;
 let directionsRenderer;
-let routeShown = false;
+let directionsService;
 
-function initMap() {
-  map = new google.maps.Map(document.getElementById('map'), {
+async function initMap() {
+  const { Map } = await google.maps.importLibrary('maps');
+  const { DirectionsRenderer, DirectionsService } = await google.maps.importLibrary('routes');
+  const { Marker } = await google.maps.importLibrary('marker');
+  const { Circle } = await google.maps.importLibrary('maps');
+
+  directionsService = new DirectionsService();
+
+  map = new Map(document.getElementById('map'), {
     zoom: 10,
     center: { lat: 51.0, lng: 19.3 },
     mapTypeControl: false,
@@ -23,7 +30,7 @@ function initMap() {
     streetViewControl: false
   });
 
-  directionsRenderer = new google.maps.DirectionsRenderer({
+  directionsRenderer = new DirectionsRenderer({
     map,
     suppressMarkers: true,
     polylineOptions: {
@@ -33,22 +40,18 @@ function initMap() {
     }
   });
 
-  addMarker(DESTINATION, 'Jasna Góra', '🏁');
+  new Marker({
+    position: DESTINATION,
+    map,
+    title: 'Jasna Góra, Częstochowa',
+    label: { text: '🏁', fontSize: '20px' }
+  });
+
   showRoute();
 }
 
-function addMarker(pos, title, label) {
-  new google.maps.Marker({
-    position: pos,
-    map,
-    title,
-    label: label ? { text: label, fontSize: '20px' } : null
-  });
-}
-
 function showRoute() {
-  const directionsService = new google.maps.DirectionsService();
-  const waypoints = WAYPOINTS.map(function(p) {
+  var waypoints = WAYPOINTS.map(function(p) {
     return { location: p, stopover: true };
   });
 
@@ -63,9 +66,6 @@ function showRoute() {
     function(result, status) {
       if (status === 'OK') {
         directionsRenderer.setDirections(result);
-        routeShown = true;
-      } else {
-        console.log('Directions error: ' + status);
       }
     }
   );
@@ -82,8 +82,8 @@ function locateMe() {
 
   navigator.geolocation.getCurrentPosition(
     function(pos) {
-      const userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      const acc = pos.coords.accuracy;
+      var userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      var acc = pos.coords.accuracy;
 
       if (userMarker) userMarker.setMap(null);
       if (userCircle) userCircle.setMap(null);
@@ -119,18 +119,19 @@ function locateMe() {
       map.fitBounds(bounds, 60);
 
       document.getElementById('coords').textContent =
-        'Szerokość: ' + pos.coords.latitude.toFixed(5) +
-        ', Długość: ' + pos.coords.longitude.toFixed(5) +
+        pos.coords.latitude.toFixed(5) + ', ' + pos.coords.longitude.toFixed(5) +
         ' (dokładność: ' + Math.round(acc) + ' m)';
 
       document.getElementById('locateBtn').disabled = false;
       document.getElementById('locateBtn').textContent = 'Pokaż moją lokalizację';
     },
     function(err) {
-      document.getElementById('coords').textContent = 'Błąd lokalizacji: ' + err.message;
+      document.getElementById('coords').textContent = 'Błąd: ' + err.message;
       document.getElementById('locateBtn').disabled = false;
       document.getElementById('locateBtn').textContent = 'Pokaż moją lokalizację';
     },
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
   );
 }
+
+initMap();
