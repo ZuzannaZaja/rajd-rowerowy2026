@@ -1,5 +1,15 @@
-const DESTINATION = { lat: 50.8147, lng: 19.1368 };
-const DEST_NAME = 'Jasna Góra, Częstochowa';
+const ROUTE = {
+  origin: 'Polna 53, 97-371 Wola Krzysztoporska',
+  waypoints: [
+    { location: { lat: 51.2925377, lng: 19.5042431 }, stopover: true },
+    { location: { lat: 51.1907400, lng: 19.3392900 }, stopover: true },
+    { location: { lat: 51.1225364, lng: 19.2898146 }, stopover: true },
+    { location: { lat: 51.0511100, lng: 19.1573900 }, stopover: true },
+    { location: { lat: 50.9430000, lng: 19.1690000 }, stopover: true },
+    { location: 'Jasna Góra, ul. o. A. Kordeckiego 2, 42-225 Częstochowa', stopover: true }
+  ],
+  destination: 'Stara Kamienica Apartamenty, Generała Jana Henryka Dąbrowskiego 10, 42-202 Częstochowa'
+};
 
 let map;
 let userMarker;
@@ -8,32 +18,42 @@ let directionsRenderer;
 
 function initMap() {
   map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 13,
-    center: DESTINATION,
-    mapId: 'rajd-rowerowy',
+    zoom: 10,
+    center: { lat: 51.15, lng: 19.3 },
     mapTypeControl: false,
     fullscreenControl: false,
     streetViewControl: false
   });
 
-  new google.maps.Marker({
-    position: DESTINATION,
-    map,
-    title: DEST_NAME,
-    label: { text: '🏁', fontSize: '20px' }
-  });
-
   directionsRenderer = new google.maps.DirectionsRenderer({
     map,
-    suppressMarkers: true,
+    suppressMarkers: false,
     polylineOptions: {
-      strokeColor: '#4285F4',
+      strokeColor: '#e74c3c',
       strokeWeight: 5,
-      strokeOpacity: 0.8
+      strokeOpacity: 0.9
     }
   });
 
-  locateMe();
+  showRoute();
+}
+
+function showRoute() {
+  const directionsService = new google.maps.DirectionsService();
+  directionsService.route(
+    {
+      origin: ROUTE.origin,
+      waypoints: ROUTE.waypoints,
+      destination: ROUTE.destination,
+      travelMode: google.maps.TravelMode.BICYCLING,
+      unitSystem: google.maps.UnitSystem.METRIC
+    },
+    function(result, status) {
+      if (status === 'OK') {
+        directionsRenderer.setDirections(result);
+      }
+    }
+  );
 }
 
 function locateMe() {
@@ -83,13 +103,6 @@ function locateMe() {
         fillOpacity: 0.1
       });
 
-      const bounds = new google.maps.LatLngBounds();
-      bounds.extend(userPos);
-      bounds.extend(DESTINATION);
-      map.fitBounds(bounds, 80);
-
-      calcRoute(userPos);
-
       coordsEl.textContent = 'Szerokość: ' + lat.toFixed(5) + ', Długość: ' + lng.toFixed(5) + ' (dokładność: ' + Math.round(acc) + ' m)';
       btn.disabled = false;
       btn.textContent = 'Pokaż moją lokalizację';
@@ -100,23 +113,5 @@ function locateMe() {
       btn.textContent = 'Pokaż moją lokalizację';
     },
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-  );
-}
-
-function calcRoute(origin) {
-  const directionsService = new google.maps.DirectionsService();
-
-  directionsService.route(
-    {
-      origin,
-      destination: DESTINATION,
-      travelMode: google.maps.TravelMode.BICYCLING,
-      unitSystem: google.maps.UnitSystem.METRIC
-    },
-    function(result, status) {
-      if (status === 'OK') {
-        directionsRenderer.setDirections(result);
-      }
-    }
   );
 }
