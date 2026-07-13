@@ -25,7 +25,7 @@ window.initMap = function() {
 
   directionsRenderer = new google.maps.DirectionsRenderer({
     map: map,
-    suppressMarkers: true,
+    suppressMarkers: false,
     polylineOptions: {
       strokeColor: '#e74c3c',
       strokeWeight: 6,
