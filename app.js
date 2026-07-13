@@ -1,4 +1,6 @@
-var ROUTE_POINTS = [
+var JASNA_GORA = { lat: 50.8147, lng: 19.1368 };
+
+var WAYPOINTS = [
   { lat: 51.2925377, lng: 19.5042431 },
   { lat: 51.1907400, lng: 19.3392900 },
   { lat: 51.1225364, lng: 19.2898146 },
@@ -7,11 +9,10 @@ var ROUTE_POINTS = [
   { lat: 50.8147, lng: 19.1368 }
 ];
 
-var JASNA_GORA = { lat: 50.8147, lng: 19.1368 };
-
 var map;
 var userMarker;
 var userCircle;
+var directionsRenderer;
 
 window.initMap = function() {
   map = new google.maps.Map(document.getElementById('map'), {
@@ -22,6 +23,16 @@ window.initMap = function() {
     streetViewControl: false
   });
 
+  directionsRenderer = new google.maps.DirectionsRenderer({
+    map: map,
+    suppressMarkers: true,
+    polylineOptions: {
+      strokeColor: '#e74c3c',
+      strokeWeight: 6,
+      strokeOpacity: 0.9
+    }
+  });
+
   new google.maps.Marker({
     position: JASNA_GORA,
     map: map,
@@ -29,40 +40,27 @@ window.initMap = function() {
     label: { text: '\u{1F3C1}', fontSize: '20px' }
   });
 
-  drawRoute();
+  showRoute();
 };
 
-function drawRoute() {
-  var routePath = [
-    { lat: 51.3692, lng: 19.3702 },
-  ];
-  for (var i = 0; i < ROUTE_POINTS.length; i++) {
-    routePath.push(ROUTE_POINTS[i]);
+function showRoute() {
+  var service = new google.maps.DirectionsService();
+  var waypoints = [];
+  for (var i = 0; i < WAYPOINTS.length; i++) {
+    waypoints.push({ location: WAYPOINTS[i], stopover: true });
   }
 
-  new google.maps.Polyline({
-    path: routePath,
-    map: map,
-    strokeColor: '#e74c3c',
-    strokeWeight: 5,
-    strokeOpacity: 0.9
+  service.route({
+    origin: 'Polna 53, 97-371 Wola Krzysztoporska',
+    waypoints: waypoints,
+    destination: 'Stara Kamienica Apartamenty, Genera\u0142a Jana Henryka D\u0105browskiego 10, 42-202 Cz\u0119stochowa',
+    travelMode: google.maps.TravelMode.BICYCLING,
+    unitSystem: google.maps.UnitSystem.METRIC
+  }, function(result, status) {
+    if (status === 'OK') {
+      directionsRenderer.setDirections(result);
+    }
   });
-
-  for (var j = 0; j < routePath.length; j++) {
-    new google.maps.Marker({
-      position: routePath[j],
-      map: map,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: j === 0 ? 8 : 5,
-        fillColor: j === 0 ? '#e74c3c' : '#f39c12',
-        fillOpacity: 1,
-        strokeColor: '#fff',
-        strokeWeight: 2
-      },
-      title: j === 0 ? 'Start' : 'Punkt ' + j
-    });
-  }
 }
 
 function showUserOnMap(lat, lng, acc) {
