@@ -6,7 +6,8 @@ var WAYPOINTS = [
   { lat: 50.9430000, lng: 19.1690000 }
 ];
 
-var DESTINATION = { lat: 50.8147, lng: 19.1368 };
+var JASNA_GORA = { lat: 50.8147, lng: 19.1368 };
+var DESTINATION = 'Stara Kamienica Apartamenty, Genera\u0142a Jana Henryka D\u0105browskiego 10, 42-202 Cz\u0119stochowa';
 
 var map;
 var userMarker;
@@ -23,7 +24,7 @@ window.initMap = function() {
   });
 
   new google.maps.Marker({
-    position: DESTINATION,
+    position: JASNA_GORA,
     map: map,
     title: 'Jasna Góra, Częstochowa',
     label: { text: '\u{1F3C1}', fontSize: '20px' }
@@ -49,13 +50,14 @@ function showRoute() {
   for (var i = 0; i < WAYPOINTS.length; i++) {
     waypoints.push({ location: WAYPOINTS[i], stopover: true });
   }
+  waypoints.push({ location: JASNA_GORA, stopover: true });
 
   service.route(
     {
       origin: 'Polna 53, 97-371 Wola Krzysztoporska',
       waypoints: waypoints,
       destination: DESTINATION,
-      travelMode: google.maps.TravelMode.DRIVING,
+      travelMode: google.maps.TravelMode.BICYCLING,
       unitSystem: google.maps.UnitSystem.METRIC
     },
     function(result, status) {
@@ -103,7 +105,7 @@ function showUserOnMap(lat, lng, acc) {
 
   var bounds = new google.maps.LatLngBounds();
   bounds.extend(userPos);
-  bounds.extend(DESTINATION);
+  bounds.extend(JASNA_GORA);
   map.fitBounds(bounds, 60);
 }
 
