@@ -60,6 +60,8 @@ function showRoute() {
     function(result, status) {
       if (status === 'OK') {
         directionsRenderer.setDirections(result);
+      } else {
+        document.getElementById('coords').textContent = 'B\u0142\u0105d trasy: ' + status;
       }
     }
   );
