@@ -25,7 +25,7 @@
     </a>
   </div>
 
-  <iframe id="map" src="https://www.google.com/maps/embed/v1/directions?key=AIzaSyBnJ4dfXBIsq_inGv1FYnGjkSSs-3r-30Y&origin=Polna+53,+97-371+Wola+Krzysztoporska&destination=Stara+Kamienica+Apartamenty,+Czestochowa&waypoints=51.2925377,19.5042431|51.1907400,19.3392900|51.1225364,19.2898146|51.0511100,19.1573900|50.9430000,19.1690000|Jasna+Gora+Czestochowa&mode=bicycling" loading="lazy"></iframe>
+  <div id="map"></div>
 
   <button class="location-btn" id="locateBtn" onclick="locateMe()">Pokaż moją lokalizację</button>
   <p class="coords" id="coords"></p>
@@ -33,35 +33,7 @@
   <footer>Rajd Rowerowy &copy; 2026</footer>
 </div>
 
-<script>
-function locateMe() {
-  var btn = document.getElementById('locateBtn');
-  var coordsEl = document.getElementById('coords');
-
-  if (!navigator.geolocation) {
-    coordsEl.textContent = 'Geolokalizacja nie jest wspierana.';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Szukam lokalizacji...';
-
-  navigator.geolocation.getCurrentPosition(
-    function(pos) {
-      var url = 'https://www.google.com/maps/dir/' + pos.coords.latitude + ',' + pos.coords.longitude + '/Polna+53+Wola+Krzysztoporska/Jasna+Gora+Czestochowa/Stara+Kamienica+Apartamenty+Czestochowa';
-      coordsEl.textContent = 'Twoja lokalizacja: ' + pos.coords.latitude.toFixed(5) + ', ' + pos.coords.longitude.toFixed(5);
-      btn.disabled = false;
-      btn.textContent = 'Otwórz nawigację';
-      btn.onclick = function() { window.open(url, '_blank'); };
-    },
-    function(err) {
-      coordsEl.textContent = 'Nie uda\u0142o si\u0119: sprawd\u017A ustawienia lokalizacji.';
-      btn.disabled = false;
-      btn.textContent = 'Poka\u017C moj\u0105 lokalizacj\u0119';
-    },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-  );
-}
-</script>
+<script src="app.js"></script>
+<script defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBnJ4dfXBIsq_inGv1FYnGjkSSs-3r-30Y&callback=initMap"></script>
 </body>
 </html>

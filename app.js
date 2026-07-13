@@ -1,18 +1,17 @@
-var WAYPOINTS = [
+var ROUTE_POINTS = [
   { lat: 51.2925377, lng: 19.5042431 },
   { lat: 51.1907400, lng: 19.3392900 },
   { lat: 51.1225364, lng: 19.2898146 },
   { lat: 51.0511100, lng: 19.1573900 },
-  { lat: 50.9430000, lng: 19.1690000 }
+  { lat: 50.9430000, lng: 19.1690000 },
+  { lat: 50.8147, lng: 19.1368 }
 ];
 
 var JASNA_GORA = { lat: 50.8147, lng: 19.1368 };
-var DESTINATION = 'Stara Kamienica Apartamenty, Genera\u0142a Jana Henryka D\u0105browskiego 10, 42-202 Cz\u0119stochowa';
 
 var map;
 var userMarker;
 var userCircle;
-var directionsRenderer;
 
 window.initMap = function() {
   map = new google.maps.Map(document.getElementById('map'), {
@@ -30,44 +29,40 @@ window.initMap = function() {
     label: { text: '\u{1F3C1}', fontSize: '20px' }
   });
 
-  directionsRenderer = new google.maps.DirectionsRenderer({
-    map: map,
-    suppressMarkers: true,
-    polylineOptions: {
-      strokeColor: '#e74c3c',
-      strokeWeight: 6,
-      strokeOpacity: 0.9
-    }
-  });
-
-  showRoute();
+  drawRoute();
 };
 
-function showRoute() {
-  var service = new google.maps.DirectionsService();
-
-  var waypoints = [];
-  for (var i = 0; i < WAYPOINTS.length; i++) {
-    waypoints.push({ location: WAYPOINTS[i], stopover: true });
+function drawRoute() {
+  var routePath = [
+    { lat: 51.3692, lng: 19.3702 },
+  ];
+  for (var i = 0; i < ROUTE_POINTS.length; i++) {
+    routePath.push(ROUTE_POINTS[i]);
   }
-  waypoints.push({ location: JASNA_GORA, stopover: true });
 
-  service.route(
-    {
-      origin: 'Polna 53, 97-371 Wola Krzysztoporska',
-      waypoints: waypoints,
-      destination: DESTINATION,
-      travelMode: google.maps.TravelMode.BICYCLING,
-      unitSystem: google.maps.UnitSystem.METRIC
-    },
-    function(result, status) {
-      if (status === 'OK') {
-        directionsRenderer.setDirections(result);
-      } else {
-        document.getElementById('coords').textContent = 'B\u0142\u0105d trasy: ' + status;
-      }
-    }
-  );
+  new google.maps.Polyline({
+    path: routePath,
+    map: map,
+    strokeColor: '#e74c3c',
+    strokeWeight: 5,
+    strokeOpacity: 0.9
+  });
+
+  for (var j = 0; j < routePath.length; j++) {
+    new google.maps.Marker({
+      position: routePath[j],
+      map: map,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: j === 0 ? 8 : 5,
+        fillColor: j === 0 ? '#e74c3c' : '#f39c12',
+        fillOpacity: 1,
+        strokeColor: '#fff',
+        strokeWeight: 2
+      },
+      title: j === 0 ? 'Start' : 'Punkt ' + j
+    });
+  }
 }
 
 function showUserOnMap(lat, lng, acc) {
@@ -126,38 +121,16 @@ function locateMe() {
         btn.disabled = false;
         btn.textContent = 'Poka\u017C moj\u0105 lokalizacj\u0119';
       },
-      function() {
-        locateByIP();
+      function(err) {
+        coordsEl.textContent = 'Nie uda\u0142o si\u0119: ' + err.message;
+        btn.disabled = false;
+        btn.textContent = 'Poka\u017C moj\u0105 lokalizacj\u0119';
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
     );
   } else {
-    locateByIP();
+    coordsEl.textContent = 'Geolokalizacja nie jest wspierana.';
+    btn.disabled = false;
+    btn.textContent = 'Poka\u017C moj\u0105 lokalizacj\u0119';
   }
-}
-
-function locateByIP() {
-  var coordsEl = document.getElementById('coords');
-  coordsEl.textContent = 'Szukam lokalizacji przez sie\u0107...';
-
-  fetch('https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyBnJ4dfXBIsq_inGv1FYnGjkSSs-3r-30Y', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: '{}'
-  })
-  .then(function(res) { return res.json(); })
-  .then(function(data) {
-    if (data.location) {
-      showUserOnMap(data.location.lat, data.location.lng, data.accuracy || null);
-      coordsEl.textContent = data.location.lat.toFixed(5) + ', ' + data.location.lng.toFixed(5) +
-        ' (dok\u0142adno\u015B\u0107: ' + Math.round(data.accuracy || 0) + ' m)';
-    }
-    document.getElementById('locateBtn').disabled = false;
-    document.getElementById('locateBtn').textContent = 'Poka\u017C moj\u0105 lokalizacj\u0119';
-  })
-  .catch(function() {
-    coordsEl.textContent = 'Nie uda\u0142o si\u0119 ustali\u0107 lokalizacji. Sprawd\u017A ustawienia lokalizacji w telefonie.';
-    document.getElementById('locateBtn').disabled = false;
-    document.getElementById('locateBtn').textContent = 'Poka\u017C moj\u0105 lokalizacj\u0119';
-  });
 }
