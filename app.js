@@ -9,6 +9,15 @@ var WAYPOINTS = [
   { lat: 50.8147, lng: 19.1368 }
 ];
 
+var STOP_NAMES = [
+  'Punkt 1',
+  'Punkt 2',
+  'Punkt 3',
+  'Punkt 4',
+  'Punkt 5',
+  'Jasna G\u00F3ra'
+];
+
 var map;
 var userMarker;
 var userCircle;
@@ -25,19 +34,12 @@ window.initMap = function() {
 
   directionsRenderer = new google.maps.DirectionsRenderer({
     map: map,
-    suppressMarkers: false,
+    suppressMarkers: true,
     polylineOptions: {
       strokeColor: '#e74c3c',
       strokeWeight: 6,
       strokeOpacity: 0.9
     }
-  });
-
-  new google.maps.Marker({
-    position: JASNA_GORA,
-    map: map,
-    title: 'Jasna Góra, Częstochowa',
-    label: { text: '\u{1F3C1}', fontSize: '20px' }
   });
 
   showRoute();
@@ -59,7 +61,35 @@ function showRoute() {
   }, function(result, status) {
     if (status === 'OK') {
       directionsRenderer.setDirections(result);
+      addStopMarkers();
     }
+  });
+}
+
+function addStopMarkers() {
+  var labels = ['\u2460', '\u2461', '\u2462', '\u2463', '\u2464', '\u{1F3C1}'];
+
+  new google.maps.Marker({
+    position: WAYPOINTS[0],
+    map: map,
+    title: STOP_NAMES[0],
+    label: { text: labels[0], fontSize: '16px' }
+  });
+
+  for (var i = 1; i < WAYPOINTS.length - 1; i++) {
+    new google.maps.Marker({
+      position: WAYPOINTS[i],
+      map: map,
+      title: STOP_NAMES[i],
+      label: { text: labels[i], fontSize: '16px' }
+    });
+  }
+
+  new google.maps.Marker({
+    position: WAYPOINTS[WAYPOINTS.length - 1],
+    map: map,
+    title: STOP_NAMES[WAYPOINTS.length - 1],
+    label: { text: labels[labels.length - 1], fontSize: '20px' }
   });
 }
 
