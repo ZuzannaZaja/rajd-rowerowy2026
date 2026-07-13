@@ -44,15 +44,10 @@ window.initMap = function() {
 
 function showRoute() {
   var service = new google.maps.DirectionsService();
-  var waypoints = [];
-  for (var i = 0; i < WAYPOINTS.length; i++) {
-    waypoints.push({ location: WAYPOINTS[i], stopover: true });
-  }
 
   service.route(
     {
       origin: 'Polna 53, 97-371 Wola Krzysztoporska',
-      waypoints: waypoints,
       destination: DESTINATION,
       travelMode: google.maps.TravelMode.BICYCLING,
       unitSystem: google.maps.UnitSystem.METRIC
@@ -61,7 +56,7 @@ function showRoute() {
       if (status === 'OK') {
         directionsRenderer.setDirections(result);
       } else {
-        document.getElementById('coords').textContent = 'B\u0142\u0105d trasy: ' + status;
+        document.getElementById('coords').textContent = 'B\u0142\u0105d trasy (bez punkt\u00F3w): ' + status;
       }
     }
   );
